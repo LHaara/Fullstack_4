@@ -3,8 +3,8 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "title": "This is the end",
-  "author": "Seth Rogen",
-  "url": "Tosi hyvän blogin linkki",
-  "likes": 99
+  "title": "Bitcoin",
+  "author": "Satoshi",
+  "url": "To the moon",
+  "likes": 16
 }
