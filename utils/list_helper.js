@@ -19,7 +19,7 @@ const favouriteBlog = (blogs) => {
     //console.log(formatBlog(mostLikes))
     return formatBlog(mostLikes) 
 
-    //jos halutaan tyhjstä taulukosta lähettää vastauksena tyhjä, eikä "undefined"
+    //jos halutaan lähettää  tyhjä taulukko, eikä "undefined" objekti
 /*     if (mostLikes === undefined || mostLikes.length == 0){
       return mostLikes
     }
@@ -29,9 +29,40 @@ const favouriteBlog = (blogs) => {
     
 }
 
+const mostBlogs = (blogs) => {
+
+  const count = (array, auth) => {    
+    return array.reduce((counter, blog) => {
+      const p = auth(blog)      
+      counter[p] = counter.hasOwnProperty(p) ? counter[p] + 1 : 1
+      return counter
+    }, {})
+  }  
+  const countByAuthor = count(blogs, blog => {    
+    return blog.author    
+  })
+  
+  const countByAuthorArray = Object.entries(countByAuthor)
+  console.log(countByAuthorArray)
+  if (countByAuthorArray === undefined || countByAuthorArray.length == 0) {
+    return {undefined}
+  }
+  else {
+    const indexOfMaxValue = countByAuthorArray.reduce((iMax, x, i, array) => x > array[iMax] ? i : iMax, 0)
+    const returnObject = 
+      {
+        author: countByAuthorArray[indexOfMaxValue][0],
+        blogs: countByAuthorArray[indexOfMaxValue][1]
+      } 
+    return returnObject
+  }
+}
+
+
 module.exports = {
     dummy,
     totalLikes,
-    favouriteBlog
+    favouriteBlog,
+    mostBlogs
 }
 
