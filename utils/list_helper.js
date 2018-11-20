@@ -31,38 +31,78 @@ const favouriteBlog = (blogs) => {
 
 const mostBlogs = (blogs) => {
 
-  const count = (array, auth) => {    
+  const count = (array, auth) => {
+
     return array.reduce((counter, blog) => {
-      const p = auth(blog)      
+      const p = auth(blog)
       counter[p] = counter.hasOwnProperty(p) ? counter[p] + 1 : 1
       return counter
     }, {})
   }  
-  const countByAuthor = count(blogs, blog => {    
+  const countByAuthor = count(blogs, blog => {
     return blog.author    
   })
-  
+ 
   const countByAuthorArray = Object.entries(countByAuthor)
-  console.log(countByAuthorArray)
   if (countByAuthorArray === undefined || countByAuthorArray.length == 0) {
     return {undefined}
   }
   else {
-    const indexOfMaxValue = countByAuthorArray.reduce((iMax, x, i, array) => x > array[iMax] ? i : iMax, 0)
-    const returnObject = 
-      {
-        author: countByAuthorArray[indexOfMaxValue][0],
-        blogs: countByAuthorArray[indexOfMaxValue][1]
-      } 
-    return returnObject
+    const authorsObjects = []
+    countByAuthorArray.forEach(function(line){
+      authorsObjects.push({author: line[0], blogs: line[1]})
+    })
+    //console.log(authorsObjects)
+    const mostBlogs = authorsObjects.reduce((prev, current) => (prev.likes > current.likes) ? prev : current, [])
+    //console.log(mostBlogs)
+
+    return mostBlogs
+
   }
 }
 
+
+const mostLikes = (blogs) => {
+  const countLikes = (array, auth) => {
+
+    return array.reduce((counter, blog) => {
+      const p = auth(blog)
+      counter[p] = counter.hasOwnProperty(p) ? counter[p] + blog.likes : blog.likes
+      return counter
+    }, {})
+  }  
+  const countLikesByAuthor = countLikes(blogs, blog => {
+    return blog.author    
+  })
+ 
+  const countByAuthorArray = Object.entries(countLikesByAuthor)
+
+  if (countByAuthorArray === undefined || countByAuthorArray.length == 0) {
+
+    return {undefined}
+  }
+  else {
+
+    const authorsObjects = []
+    countByAuthorArray.forEach(function(line){
+      authorsObjects.push({author: line[0], likes: line[1]})
+    })
+    //console.log(authorsObjects)
+
+    const mostLikes = authorsObjects.reduce((prev, current) => (prev.likes > current.likes) ? prev : current, [])
+   // console.log(mostLikes)
+
+    return mostLikes
+  }
+
+
+}
 
 module.exports = {
     dummy,
     totalLikes,
     favouriteBlog,
-    mostBlogs
+    mostBlogs,
+    mostLikes
 }
 
