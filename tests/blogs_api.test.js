@@ -52,9 +52,14 @@ describe('Tests for GET operator: ', () => {
     const response = await api
       .get('/api/blogs')
     
-    const formattedBlogs = response.body
+/*     const formattedBlogs = response.body
     formattedBlogs.forEach(function (blog){
       delete blog.id
+    }) */
+
+    const formattedBlogs = response.body.map(blog => {
+      delete blog.id
+      return blog
     })
 
     const testblog =   {
@@ -66,6 +71,50 @@ describe('Tests for GET operator: ', () => {
 
     expect(formattedBlogs).toContainEqual(testblog)
 
+  })
+
+  test('a valid blog can be added ', async () => {
+    const newBlog = {
+      title: "First class tests",
+      author: "Robert C. Martin",
+      url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
+      likes: 10
+    }
+  
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+  
+    const response = await api
+      .get('/api/blogs')
+  
+    const titles = response.body.map(r => r.title)
+  
+    expect(response.body.length).toBe(initialBlogs.length + 1)
+    expect(titles).toContain('First class tests')
+  })
+
+  test('blog without title is not added ', async () => {
+    const newBlog = {
+      author: "Robert C. Martin",
+      url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
+      likes: 10
+    }
+  
+    const initialBlogs = await api
+      .get('/api/blogs')
+  
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+  
+    const response = await api
+      .get('/api/blogs')
+  
+    expect(response.body.length).toBe(initialBlogs.body.length)
   })
 
 
