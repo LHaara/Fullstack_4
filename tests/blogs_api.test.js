@@ -5,16 +5,16 @@ const Blog = require('../models/blog')
 const helper = require('./test_helper')
 
 
-beforeEach(async () => {
-  await Blog.remove({})
-
-  const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
-  const promiseArray = blogObjects.map(blog => blog.save())
-  await Promise.all(promiseArray)
-})
-
-
 describe('Tests for GET operator: ', () => {
+
+  beforeAll(async () => {
+    await Blog.remove({})
+  
+    const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
+    const promiseArray = blogObjects.map(blog => blog.save())
+    await Promise.all(promiseArray)
+  })
+
   test('blogs are returned as json', async () => {
     await api
       .get('/api/blogs')
@@ -40,6 +40,36 @@ describe('Tests for GET operator: ', () => {
     }
     expect(blogs).toContainEqual(testblog)
   })
+  test('individual blogs are returned as json by GET /api/blogs/:id', async () => {
+    const blogsInDatabase = await helper.blogsInDb()
+    const aBlog = blogsInDatabase[0]
+
+    const response = await api
+      .get(`/api/blogs/${aBlog._id}`)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body).toEqual(aBlog)
+  })
+
+  test('404 returned by GET /api/blogs/:id with nonexisting valid id', async () => {
+    const validNonexistingId = await helper.nonExistingId()
+
+    const response = await api
+      .get(`/api/blogs/${validNonexistingId}`)
+      .expect(404)
+  })
+
+  test('400 is returned by GET /api/blogs/:id with invalid id', async () => {
+    const invalidId = "7"
+
+    const response = await api
+      .get(`/api/blogs/${invalidId}`)
+      .expect(400)
+  })
+
+
+
 })
 
 describe('Tests for POST operator: ', () => {
@@ -104,10 +134,43 @@ describe('Tests for POST operator: ', () => {
     const newBlogReply = blogsAfter.find(blog => blog.title === 'Tosi outo blogi')
     expect(newBlogReply.likes).toBe(0)
   })
+})
+
+describe('deletion of a blog', async () => {
+  let addedBlog
+
+  beforeAll(async () => {
+    await Blog.remove({})
+
+    addedBlog = new Blog({
+      title: "Tosi outo blogi",
+      author: "Tosi outo tyyppi",
+      url: "https://localhost:3003/api/blogs"
+    })
+    await addedBlog.save()
+  })
+
+
+  test('DELETE /api/blogs/:id succeeds with proper statuscode', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+
+
+    await api
+      .delete(`/api/blogs/${addedBlog._id}`)
+      .expect(204)
+
+    const blogsAfterOperation = await helper.blogsInDb()
+
+    const titles = blogsAfterOperation.map(r => r.title)
+
+    expect(titles).not.toContain(addedBlog.title) 
+    expect(blogsAtStart).not.toEqual(blogsAfterOperation)
+    expect(blogsAfterOperation.length).toBe(blogsAtStart.length - 1)
+  })
+})
 
 
 
   afterAll(() => {
     server.close()
   })
-})
