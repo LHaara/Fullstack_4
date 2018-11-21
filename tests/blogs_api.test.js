@@ -117,6 +117,30 @@ describe('Tests for GET operator: ', () => {
     expect(response.body.length).toBe(initialBlogs.body.length)
   })
 
+  test.only('blog without value for likes gets 0 likes ', async () => {
+    const newBlog = {
+      title: "First class tests",
+      author: "Robert C. Martin",
+      url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
+      likes: ''
+    }
+  
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+  
+    const response = await api
+      .get('/api/blogs')
+    
+    const newBlogReply = response.body.find(blog => blog.title === 'First class tests')
+    console.log(newBlogReply.likes)
+
+    expect(response.body.length).toBe(initialBlogs.length + 1)
+    expect(newBlogReply.likes).toBe(0)
+  })
+
 
   afterAll(() => {
     server.close()
