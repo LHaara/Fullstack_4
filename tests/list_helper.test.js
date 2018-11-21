@@ -1,5 +1,5 @@
 const listHelper = require('../utils/list_helper')
-describe.skip('list helpers', () => {
+describe('list helpers', () => {
     
   describe('total likes of the list', () => {
       const listWithOneBlog = [

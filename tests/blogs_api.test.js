@@ -28,7 +28,7 @@ describe('Tests for GET operator: ', () => {
     expect(blogs).toEqual(helper.initialBlogs)
   })
 
-  test.only('a specific blog is within the returned blogs', async () => {
+  test('a specific blog is within the returned blogs', async () => {
     const blogs = await helper.blogsInDb()
     const testblog = 
     {
