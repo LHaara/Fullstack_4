@@ -18,10 +18,10 @@ blogsRouter.post('/', async (request, response) => {
   try {
     const body = request.body
 
-    if (body.title === undefined) {
-      return response.status(400).json({ error: 'title missing' })
+    if (body.title === undefined && body.url === undefined) {
+      return response.status(400).json({ error: 'Both title and url are missing' })
     }
-    console.log(body.likes)
+
     const blog = new Blog({
       title: body.title,
       author: body.author,

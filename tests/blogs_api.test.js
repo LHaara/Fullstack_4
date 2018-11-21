@@ -96,10 +96,9 @@ describe('Tests for GET operator: ', () => {
     expect(titles).toContain('First class tests')
   })
 
-  test('blog without title is not added ', async () => {
+  test('blog without title and url is not added ', async () => {
     const newBlog = {
-      author: "Robert C. Martin",
-      url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
+      author: "Joku joka ei osaa laittaa otsikkoa eikä urlia",
       likes: 10
     }
   
@@ -117,12 +116,12 @@ describe('Tests for GET operator: ', () => {
     expect(response.body.length).toBe(initialBlogs.body.length)
   })
 
-  test.only('blog without value for likes gets 0 likes ', async () => {
+  test('blog without value for likes gets 0 likes ', async () => {
     const newBlog = {
-      title: "First class tests",
-      author: "Robert C. Martin",
-      url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
-      likes: ''
+      title: "Tosi outo blogi",
+      author: "Tosi outo tyyppi",
+      url: "https://localhost:3003/api/blogs",
+      //likes: ''
     }
   
     await api
@@ -134,10 +133,9 @@ describe('Tests for GET operator: ', () => {
     const response = await api
       .get('/api/blogs')
     
-    const newBlogReply = response.body.find(blog => blog.title === 'First class tests')
+    const newBlogReply = response.body.find(blog => blog.title === 'Tosi outo blogi')
     console.log(newBlogReply.likes)
 
-    expect(response.body.length).toBe(initialBlogs.length + 1)
     expect(newBlogReply.likes).toBe(0)
   })
 
