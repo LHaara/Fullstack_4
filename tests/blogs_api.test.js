@@ -2,32 +2,13 @@ const supertest = require('supertest')
 const { app, server } = require('../index')
 const api = supertest(app)
 const Blog = require('../models/blog')
+const helper = require('./test_helper')
 
-const initialBlogs =[
-  {
-    title: "React patterns",
-    author: "Michael Chan",
-    url: "https://reactpatterns.com/",
-    likes: 7,
-  },
-  {
-    title: "Go To Statement Considered Harmful",
-    author: "Edsger W. Dijkstra",
-    url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-    likes: 5,
-  },
-  {
-    title: "Canonical string reduction",
-    author: "Edsger W. Dijkstra",
-    url: "http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html",
-    likes: 12,
-  }
-]
 
-beforeAll(async () => {
+beforeEach(async () => {
   await Blog.remove({})
 
-  const blogObjects = initialBlogs.map(blog => new Blog(blog))
+  const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
   const promiseArray = blogObjects.map(blog => blog.save())
   await Promise.all(promiseArray)
 })
@@ -41,40 +22,33 @@ describe('Tests for GET operator: ', () => {
       .expect('Content-Type', /application\/json/)
   })
 
-  test('all blogs are returned', async () => {
-    const response = await api
-      .get('/api/blogs')
-
-    expect(response.body.length).toBe(initialBlogs.length)
+  test('all blogs are returned', async () => {    
+    const blogs = await helper.blogsInDb()
+    expect(blogs.length).toBe(helper.initialBlogs.length)
+    expect(blogs).toEqual(helper.initialBlogs)
   })
 
-  test('a specific blog is within the returned blogs', async () => {
-    const response = await api
-      .get('/api/blogs')
-    
-/*     const formattedBlogs = response.body
-    formattedBlogs.forEach(function (blog){
-      delete blog.id
-    }) */
-
-    const formattedBlogs = response.body.map(blog => {
-      delete blog.id
-      return blog
-    })
-
-    const testblog =   {
+  test.only('a specific blog is within the returned blogs', async () => {
+    const blogs = await helper.blogsInDb()
+    const testblog = 
+    {
+      _id: "5a422aa71b54a676234d17f8",
       title: "Go To Statement Considered Harmful",
       author: "Edsger W. Dijkstra",
       url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-      likes: 5
+      likes: 5,
     }
-
-    expect(formattedBlogs).toContainEqual(testblog)
-
+    expect(blogs).toContainEqual(testblog)
   })
+})
 
+describe('Tests for POST operator: ', () => {
   test('a valid blog can be added ', async () => {
+
+    const blogsBefore = await helper.blogsInDb()
+
     const newBlog = {
+      _id: "5a422b891b54a676234d17fa",
       title: "First class tests",
       author: "Robert C. Martin",
       url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
@@ -87,13 +61,10 @@ describe('Tests for GET operator: ', () => {
       .expect(200)
       .expect('Content-Type', /application\/json/)
   
-    const response = await api
-      .get('/api/blogs')
-  
-    const titles = response.body.map(r => r.title)
-  
-    expect(response.body.length).toBe(initialBlogs.length + 1)
-    expect(titles).toContain('First class tests')
+    const blogsAfter = await helper.blogsInDb()
+
+    expect(blogsAfter.length).toBe(blogsBefore.length+1)
+    expect(blogsAfter).toContainEqual(newBlog)
   })
 
   test('blog without title and url is not added ', async () => {
@@ -102,18 +73,16 @@ describe('Tests for GET operator: ', () => {
       likes: 10
     }
   
-    const initialBlogs = await api
-      .get('/api/blogs')
+    const blogsBefore = await helper.blogsInDb()
   
     await api
       .post('/api/blogs')
       .send(newBlog)
       .expect(400)
   
-    const response = await api
-      .get('/api/blogs')
+      const blogsAfter = await helper.blogsInDb()
   
-    expect(response.body.length).toBe(initialBlogs.body.length)
+    expect(blogsAfter.length).toBe(blogsBefore.length)
   })
 
   test('blog without value for likes gets 0 likes ', async () => {
@@ -130,14 +99,12 @@ describe('Tests for GET operator: ', () => {
       .expect(200)
       .expect('Content-Type', /application\/json/)
   
-    const response = await api
-      .get('/api/blogs')
+    const blogsAfter = await helper.blogsInDb()
     
-    const newBlogReply = response.body.find(blog => blog.title === 'Tosi outo blogi')
-    console.log(newBlogReply.likes)
-
+    const newBlogReply = blogsAfter.find(blog => blog.title === 'Tosi outo blogi')
     expect(newBlogReply.likes).toBe(0)
   })
+
 
 
   afterAll(() => {
