@@ -169,6 +169,39 @@ describe('deletion of a blog', async () => {
   })
 })
 
+describe('updating a blog', async () => {
+  let addedBlog
+
+  beforeAll(async () => {
+    await Blog.remove({})
+  
+    const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
+    const promiseArray = blogObjects.map(blog => blog.save())
+    await Promise.all(promiseArray)
+  })
+
+  test('increasing likes by one', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogBefore = blogsAtStart[0]
+
+    const blogEdit = {    
+      title: blogBefore.title,
+      author: blogBefore.author,
+      url: blogBefore.url,
+      likes: blogBefore.likes + 1,
+    }
+    await api
+      .put(`/api/blogs/${blogBefore._id}`)
+      .send(blogEdit)
+      .expect(200)
+
+    const blogsAfterOperation = await helper.blogsInDb()
+    const blogAfter = blogsAfterOperation[0]
+
+    expect(blogAfter.likes).toBe(blogBefore.likes+1)
+  })
+})
+
 
 
   afterAll(() => {
