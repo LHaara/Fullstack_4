@@ -204,7 +204,7 @@ describe('updating a blog', async () => {
 })
 
 describe.only('when there is initially one user at db', async () => {
-  beforeAll(async () => {
+  beforeEach(async () => {
     await User.remove({})
     const user = new User({ username: 'root', password: 'sekret' })
     await user.save()
@@ -251,6 +251,49 @@ describe.only('when there is initially one user at db', async () => {
   
     const usersAfterOperation = await helper.usersInDb()
     expect(usersAfterOperation.length).toBe(usersBeforeOperation.length)
+  })
+  test('POST /api/users fails with proper statuscode and message if password is too short', async () => {
+    const usersBeforeOperation = await helper.usersInDb()
+  
+    const newUser = {
+      username: 'Maikki',
+      name: 'Marja-Liisa Kirvesniemi',
+      adult: true,
+      password: 'sa'
+    }
+  
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(412)
+      .expect('Content-Type', /application\/json/)
+  
+    expect(result.body).toEqual({ error: 'password must be at least 3 characters'})
+  
+    const usersAfterOperation = await helper.usersInDb()
+    expect(usersAfterOperation.length).toBe(usersBeforeOperation.length)
+  })
+  test('POST /api/users succeeds and sets the adult field as true if it is not defined by user', async () => {
+    const usersBeforeOperation = await helper.usersInDb()
+  
+    const newUser = {
+      username: 'Maikki',
+      name: 'Marja-Liisa Kirvesniemi',
+      password: 'salasana'
+    }
+  
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+  
+    const usersAfterOperation = await helper.usersInDb()
+    expect(usersAfterOperation.length).toBe(usersBeforeOperation.length+1)
+    const usernames = usersAfterOperation.map(u=>u.username)
+    expect(usernames).toContain(newUser.username)
+    expect(result.body.adult).toBe(true)
   })
 
 })
