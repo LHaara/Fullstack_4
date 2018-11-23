@@ -12,7 +12,6 @@ usersRouter.get('/', async (request, response) => {
 
 })
 
-
 usersRouter.post('/', async (request, response) => {
   try {
     const body = request.body
