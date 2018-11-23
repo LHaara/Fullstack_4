@@ -203,7 +203,7 @@ describe('updating a blog', async () => {
   })
 })
 
-describe.only('when there is initially one user at db', async () => {
+describe('when there is initially one user at db', async () => {
   beforeEach(async () => {
     await User.remove({})
     const user = new User({ username: 'root', password: 'sekret' })

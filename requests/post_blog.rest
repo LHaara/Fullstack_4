@@ -3,8 +3,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "title": "Bitcoin",
-  "author": "Satoshi",
-  "url": "To the moon",
-  "likes": 16
+  "title": "Test Title",
+  "author": "Testaaja",
+  "url": "https://ww.fi"
 }
