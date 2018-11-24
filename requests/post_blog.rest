@@ -3,7 +3,7 @@ Content-Type: application/json
 Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRlc3Rlcmk0IiwiaWQiOiI1YmY4MTc0ZWFmMzNlOTU0ZDYyMmVjZDkiLCJpYXQiOjE1NDI5OTI4NTJ9.YQc-7kR3hTvGGCWaJ3wOtNnreIfYMnwlerC570X5aXA
 
 {
-  "title": "Koitetaas",
-  "author": "Testaaja",
-  "url": "www.google.fi"
+  "title": "fhgjfgj",
+  "author": "fghjfgjg",
+  "url": "jdyyjdjdjh"
 }
