@@ -9,8 +9,7 @@ const User = require('../models/user')
 describe('Tests for GET operator: ', () => {
 
   beforeAll(async () => {
-    await Blog.remove({})
-  
+    await Blog.remove({})  
     const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
     const promiseArray = blogObjects.map(blog => blog.save())
     await Promise.all(promiseArray)
@@ -73,7 +72,35 @@ describe('Tests for GET operator: ', () => {
 
 })
 
-describe('Tests for POST operator: ', () => {
+describe('Tests for POST, DELETE and PUT operators: ', () => {
+
+  beforeAll(async () => {
+    await Blog.remove({})  
+    const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
+    const promiseArray = blogObjects.map(blog => blog.save())
+    await Promise.all(promiseArray)
+
+    await User.remove({})
+    const newUser = {
+      username: 'Juhis',
+      name: 'Juha Mieto',
+      adult: true,
+      password: 'salakala'
+    }
+    await api
+      .post('/api/users')
+      .send(newUser)
+
+    const loginUser = { username: 'Juhis', password: 'salakala' }
+ 
+    const response = await api
+      .post('/api/login')
+      .send(loginUser)
+ 
+    helper.testUserToken = response.body.token
+
+  })
+
   test('a valid blog can be added ', async () => {
 
     const blogsBefore = await helper.blogsInDb()
@@ -85,10 +112,11 @@ describe('Tests for POST operator: ', () => {
       url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
       likes: 10
     }
-  
+
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', 'bearer '+helper.testUserToken)
       .expect(200)
       .expect('Content-Type', /application\/json/)
   
@@ -100,7 +128,7 @@ describe('Tests for POST operator: ', () => {
 
   test('blog without title and url is not added ', async () => {
     const newBlog = {
-      author: "Joku joka ei osaa laittaa otsikkoa eikä urlia",
+      author: "Juha ei osaa laittaa otsikkoa eikä urlia",
       likes: 10
     }
   
@@ -109,6 +137,7 @@ describe('Tests for POST operator: ', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', 'bearer '+helper.testUserToken)
       .expect(400)
   
       const blogsAfter = await helper.blogsInDb()
@@ -127,6 +156,7 @@ describe('Tests for POST operator: ', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', 'bearer '+helper.testUserToken)
       .expect(200)
       .expect('Content-Type', /application\/json/)
   
@@ -135,72 +165,54 @@ describe('Tests for POST operator: ', () => {
     const newBlogReply = blogsAfter.find(blog => blog.title === 'Tosi outo blogi')
     expect(newBlogReply.likes).toBe(0)
   })
-})
 
-describe('deletion of a blog', async () => {
-  let addedBlog
 
-  beforeAll(async () => {
-    await Blog.remove({})
+  describe('deletion of a blog', async () => {
 
-    addedBlog = new Blog({
-      title: "Tosi outo blogi",
-      author: "Tosi outo tyyppi",
-      url: "https://localhost:3003/api/blogs"
+    test('DELETE /api/blogs/:id succeeds with proper statuscode', async () => {
+      const blogsAtStart = await helper.blogsInDb()
+
+
+      await api
+        .delete(`/api/blogs/5a422b891b54a676234d17fa`)
+        .set('Authorization', 'bearer '+helper.testUserToken)
+        .expect(204)
+
+      const blogsAfterOperation = await helper.blogsInDb()
+
+      const titles = blogsAfterOperation.map(r => r.title)
+
+      expect(titles).not.toContain('First class tests') 
+      expect(blogsAtStart).not.toEqual(blogsAfterOperation)
+      expect(blogsAfterOperation.length).toBe(blogsAtStart.length - 1)
     })
-    await addedBlog.save()
   })
 
-
-  test('DELETE /api/blogs/:id succeeds with proper statuscode', async () => {
-    const blogsAtStart = await helper.blogsInDb()
+  describe('updating a blog', async () => {
 
 
-    await api
-      .delete(`/api/blogs/${addedBlog._id}`)
-      .expect(204)
+    test('increasing likes by one', async () => {
+      const blogsAtStart = await helper.blogsInDb()
+      const blogBefore = blogsAtStart[0]
 
-    const blogsAfterOperation = await helper.blogsInDb()
+      const blogEdit = {    
+        title: blogBefore.title,
+        author: blogBefore.author,
+        url: blogBefore.url,
+        likes: blogBefore.likes + 1,
+      }
+      await api
+        .put(`/api/blogs/${blogBefore._id}`)
+        .send(blogEdit)
+        .expect(200)
 
-    const titles = blogsAfterOperation.map(r => r.title)
+      const blogsAfterOperation = await helper.blogsInDb()
+      const blogAfter = blogsAfterOperation[0]
 
-    expect(titles).not.toContain(addedBlog.title) 
-    expect(blogsAtStart).not.toEqual(blogsAfterOperation)
-    expect(blogsAfterOperation.length).toBe(blogsAtStart.length - 1)
-  })
-})
-
-describe('updating a blog', async () => {
-  let addedBlog
-
-  beforeAll(async () => {
-    await Blog.remove({})
-  
-    const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
-    const promiseArray = blogObjects.map(blog => blog.save())
-    await Promise.all(promiseArray)
+      expect(blogAfter.likes).toBe(blogBefore.likes+1)
+    })
   })
 
-  test('increasing likes by one', async () => {
-    const blogsAtStart = await helper.blogsInDb()
-    const blogBefore = blogsAtStart[0]
-
-    const blogEdit = {    
-      title: blogBefore.title,
-      author: blogBefore.author,
-      url: blogBefore.url,
-      likes: blogBefore.likes + 1,
-    }
-    await api
-      .put(`/api/blogs/${blogBefore._id}`)
-      .send(blogEdit)
-      .expect(200)
-
-    const blogsAfterOperation = await helper.blogsInDb()
-    const blogAfter = blogsAfterOperation[0]
-
-    expect(blogAfter.likes).toBe(blogBefore.likes+1)
-  })
 })
 
 describe('when there is initially one user at db', async () => {

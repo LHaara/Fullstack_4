@@ -38,13 +38,35 @@ blogsRouter.get('/:id', async (request, response) => {
 
 blogsRouter.delete('/:id', async (request, response) => {
   try {
-    await Blog.findByIdAndRemove(request.params.id)
 
-    response.status(204).end()
-  } catch (exception) {
-    console.log(exception)
-    response.status(400).json({ error: 'malformatted id' })
-  }
+    // JsonWebTokenError antaa hyvät ilmoitukset järkevillä statuskoodeilla
+    if(request.token === null){
+      return response.status(401).json({ error: 'token missing' })
+    }
+      
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
+
+    const blog = await Blog.findById(request.params.id)
+
+
+    if ( blog.user.toString() === decodedToken.id ){
+      await Blog.deleteOne(blog)
+      response.status(204).end()
+    }
+    else
+    response.status(401).json({ error: 'insufficient permissions' })
+
+
+
+    } catch (exception) {
+      if (exception.name === 'JsonWebTokenError' ) {
+        response.status(401).json({ error: exception.message })
+      } 
+      else {   
+        console.log(exception)
+        response.status(400).json({ error: 'malformatted id' })
+      }
+    }
 })
 
 /* const getTokenFrom = (request) => {
@@ -100,7 +122,7 @@ blogsRouter.post('/', async (request, response) => {
 blogsRouter.put('/:id', async (request, response) => {
   try {
     const blog = request.body
-    console.log(request.params.id)
+
 /*     const blog = {
       title: body.title,
       author: body.author,
@@ -108,8 +130,8 @@ blogsRouter.put('/:id', async (request, response) => {
       likes: body.likes
     } */
 
-    const updatedBlog = await Blog.findByIdAndUpdate("request.params.id", blog, { new: true })
-    response.json(formatBlog(updatedBlog))
+    const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blog, { new: true })
+    response.json(Blog.format(updatedBlog))
 
   } catch (exception) {
     console.log(exception)
