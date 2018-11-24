@@ -31,7 +31,9 @@ app.use(morgan(':method :url :data :status :res[content-length] - :response-time
 
 app.use(cors())
 app.use(bodyParser.json())
-//app.use(middleware.logger)
+app.use(middleware.logger)
+app.use(middleware.tokenExtractor)
+
 
 app.use('/api/users', usersRouter)
 app.use('/api/blogs', blogsRouter)
